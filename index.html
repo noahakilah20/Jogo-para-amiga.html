@@ -4,56 +4,49 @@
   <meta charset="UTF-8" />
   <title>Jogo da Aninha 💖</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #fff;
+    html, body {
       margin: 0;
+      padding: 0;
       overflow: hidden;
-      position: relative;
+      background: white;
+      font-family: Arial, sans-serif;
     }
-
-    #gameCanvas {
-      border: 2px solid black;
+    canvas {
+      display: block;
+      margin: auto;
       background-image: url('https://harikacocuklarizmir.com/images/uploads/2dc834e1801c5d89034a2b8454d42ce8.jpg');
       background-size: cover;
-      background-repeat: no-repeat;
       background-position: center bottom;
+      border: 2px solid black;
       touch-action: none;
     }
-
     #info {
       position: absolute;
       top: 10px;
-      left: 20px;
+      left: 10px;
       font-weight: bold;
+      color: black;
       font-size: 16px;
     }
-
     #finalMsg {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      font-size: 24px;
       font-weight: bold;
-      font-size: 22px;
       color: black;
-      display: none;
-      text-align: center;
       background: #ffeef4;
-      padding: 15px 25px;
+      padding: 15px 20px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+      display: none;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
   <div id="info">Pontuação: <span id="score">0</span> | Recorde: <span id="highScore">0</span></div>
   <div id="finalMsg">❤️ Você é incrível, Aninha! ❤️</div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -68,17 +61,41 @@
     };
 
     let balls = [
-      { x: canvas.width / 2, y: canvas.height - 50, dx: 3, dy: -3, radius: 7 }
+      { x: canvas.width / 2, y: canvas.height - 60, dx: 3, dy: -3, radius: 7 }
     ];
 
-    const bricks = [];
-    const brickRowCount = 4;
-    const brickColumnCount = 7;
-    const brickWidth = 50;
-    const brickHeight = 50;
-    const brickPadding = 10;
-    const brickOffsetTop = 30;
-    const brickOffsetLeft = 30;
+    let bricks = [];
+    const brickWidth = 20;
+    const brickHeight = 20;
+    const heartShape = [
+      "001111100",
+      "011111110",
+      "111111111",
+      "111111111",
+      "111111111",
+      "011111110",
+      "001111100",
+      "000111000",
+      "000010000"
+    ];
+
+    function initBricks() {
+      bricks = [];
+      const offsetX = (canvas.width - heartShape[0].length * (brickWidth + 2)) / 2;
+      const offsetY = 50;
+
+      for (let row = 0; row < heartShape.length; row++) {
+        for (let col = 0; col < heartShape[row].length; col++) {
+          if (heartShape[row][col] === '1') {
+            bricks.push({
+              x: offsetX + col * (brickWidth + 2),
+              y: offsetY + row * (brickHeight + 2),
+              status: true
+            });
+          }
+        }
+      }
+    }
 
     const compliments = [
       "Você arrasa, Aninha! 🌟",
@@ -94,19 +111,6 @@
     let score = 0;
     let highScore = localStorage.getItem("highScore") || 0;
     document.getElementById("highScore").textContent = highScore;
-
-    const heartImg = new Image();
-    heartImg.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Red_Heart.svg/1024px-Red_Heart.svg.png";
-
-    function initBricks() {
-      for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-          const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
-          const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-          bricks.push({ x: brickX, y: brickY, status: true });
-        }
-      }
-    }
 
     function drawPaddle() {
       ctx.fillStyle = "#87CEFA";
@@ -126,7 +130,11 @@
     function drawBricks() {
       bricks.forEach(brick => {
         if (brick.status) {
-          ctx.drawImage(heartImg, brick.x, brick.y, brickWidth, brickHeight);
+          ctx.fillStyle = "#ff3399";
+          ctx.fillRect(brick.x, brick.y, brickWidth, brickHeight);
+          ctx.fillStyle = "black";
+          ctx.font = "14px Arial";
+          ctx.fillText("❤️", brick.x + 1, brick.y + 16);
         }
       });
     }
@@ -141,7 +149,7 @@
         ball.x += ball.dx;
         ball.y += ball.dy;
 
-        // Colisão com parede
+        // parede
         if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
           ball.dx = -ball.dx;
         }
@@ -151,7 +159,7 @@
           balls.splice(index, 1);
         }
 
-        // Paddle
+        // paddle
         if (
           ball.x > paddle.x &&
           ball.x < paddle.x + paddle.width &&
@@ -160,7 +168,7 @@
           ball.dy = -ball.dy;
         }
 
-        // Tijolos (corações)
+        // colisão com tijolos
         bricks.forEach(brick => {
           if (brick.status) {
             if (
@@ -173,13 +181,13 @@
               brick.status = false;
               score++;
               document.getElementById("score").textContent = score;
+
               if (score > highScore) {
                 highScore = score;
                 localStorage.setItem("highScore", highScore);
                 document.getElementById("highScore").textContent = highScore;
               }
 
-              // Multiplica bola
               if (balls.length < 10) {
                 balls.push({
                   x: ball.x,
@@ -190,7 +198,6 @@
                 });
               }
 
-              // Elogio da Aninha
               const compliment = compliments[Math.floor(Math.random() * compliments.length)];
               const msg = document.createElement("div");
               msg.textContent = compliment;
@@ -214,23 +221,21 @@
       }
     }
 
-    // Controles - mouse e toque
+    // mouse
     document.addEventListener("mousemove", e => {
       const rect = canvas.getBoundingClientRect();
       paddle.x = e.clientX - rect.left - paddle.width / 2;
     });
 
+    // toque
     canvas.addEventListener("touchmove", e => {
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
       paddle.x = touch.clientX - rect.left - paddle.width / 2;
     });
 
-    // Iniciar após carregar imagem do coração
-    heartImg.onload = () => {
-      initBricks();
-      draw();
-    };
+    initBricks();
+    draw();
   </script>
 </body>
 </html>
