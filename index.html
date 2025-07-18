@@ -30,6 +30,7 @@
       top: 10px;
       left: 20px;
       font-weight: bold;
+      font-size: 16px;
     }
 
     #finalMsg {
@@ -38,10 +39,14 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-weight: bold;
-      font-size: 20px;
+      font-size: 22px;
       color: black;
       display: none;
       text-align: center;
+      background: #ffeef4;
+      padding: 15px 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
     }
   </style>
 </head>
@@ -69,8 +74,8 @@
     const bricks = [];
     const brickRowCount = 4;
     const brickColumnCount = 7;
-    const brickWidth = 40;
-    const brickHeight = 40;
+    const brickWidth = 50;
+    const brickHeight = 50;
     const brickPadding = 10;
     const brickOffsetTop = 30;
     const brickOffsetLeft = 30;
@@ -89,6 +94,9 @@
     let score = 0;
     let highScore = localStorage.getItem("highScore") || 0;
     document.getElementById("highScore").textContent = highScore;
+
+    const heartImg = new Image();
+    heartImg.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Red_Heart.svg/1024px-Red_Heart.svg.png";
 
     function initBricks() {
       for (let c = 0; c < brickColumnCount; c++) {
@@ -118,9 +126,7 @@
     function drawBricks() {
       bricks.forEach(brick => {
         if (brick.status) {
-          ctx.font = "30px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText("❤️", brick.x + brickWidth / 2, brick.y + brickHeight - 10);
+          ctx.drawImage(heartImg, brick.x, brick.y, brickWidth, brickHeight);
         }
       });
     }
@@ -135,7 +141,7 @@
         ball.x += ball.dx;
         ball.y += ball.dy;
 
-        // Paredes
+        // Colisão com parede
         if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
           ball.dx = -ball.dx;
         }
@@ -154,7 +160,7 @@
           ball.dy = -ball.dy;
         }
 
-        // Tijolos
+        // Tijolos (corações)
         bricks.forEach(brick => {
           if (brick.status) {
             if (
@@ -184,7 +190,7 @@
                 });
               }
 
-              // Elogio
+              // Elogio da Aninha
               const compliment = compliments[Math.floor(Math.random() * compliments.length)];
               const msg = document.createElement("div");
               msg.textContent = compliment;
@@ -208,21 +214,23 @@
       }
     }
 
-    // Suporte a mouse
+    // Controles - mouse e toque
     document.addEventListener("mousemove", e => {
       const rect = canvas.getBoundingClientRect();
       paddle.x = e.clientX - rect.left - paddle.width / 2;
     });
 
-    // Suporte a toque (mobile)
     canvas.addEventListener("touchmove", e => {
       const touch = e.touches[0];
       const rect = canvas.getBoundingClientRect();
       paddle.x = touch.clientX - rect.left - paddle.width / 2;
     });
 
-    initBricks();
-    draw();
+    // Iniciar após carregar imagem do coração
+    heartImg.onload = () => {
+      initBricks();
+      draw();
+    };
   </script>
 </body>
 </html>
