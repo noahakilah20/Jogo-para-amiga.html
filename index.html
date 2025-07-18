@@ -112,6 +112,8 @@
     let highScore = localStorage.getItem("highScore") || 0;
     document.getElementById("highScore").textContent = highScore;
 
+    let gameWon = false;
+
     function drawPaddle() {
       ctx.fillStyle = "#87CEFA";
       ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
@@ -145,80 +147,97 @@
       drawBalls();
       drawBricks();
 
-      balls.forEach((ball, index) => {
-        ball.x += ball.dx;
-        ball.y += ball.dy;
+      if (!gameWon) {
+        balls.forEach((ball, index) => {
+          ball.x += ball.dx;
+          ball.y += ball.dy;
 
-        // parede
-        if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
-          ball.dx = -ball.dx;
-        }
-        if (ball.y + ball.dy < ball.radius) {
-          ball.dy = -ball.dy;
-        } else if (ball.y + ball.dy > canvas.height - ball.radius) {
-          balls.splice(index, 1);
-        }
+          // paredes
+          if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+            ball.dx = -ball.dx;
+          }
+          if (ball.y + ball.dy < ball.radius) {
+            ball.dy = -ball.dy;
+          } else if (ball.y + ball.dy > canvas.height - ball.radius) {
+            balls.splice(index, 1);
+          }
 
-        // paddle
-        if (
-          ball.x > paddle.x &&
-          ball.x < paddle.x + paddle.width &&
-          ball.y + ball.radius > paddle.y
-        ) {
-          ball.dy = -ball.dy;
-        }
+          // paddle
+          if (
+            ball.x > paddle.x &&
+            ball.x < paddle.x + paddle.width &&
+            ball.y + ball.radius > paddle.y
+          ) {
+            ball.dy = -ball.dy;
+          }
 
-        // colisão com tijolos
-        bricks.forEach(brick => {
-          if (brick.status) {
-            if (
-              ball.x > brick.x &&
-              ball.x < brick.x + brickWidth &&
-              ball.y > brick.y &&
-              ball.y < brick.y + brickHeight
-            ) {
-              ball.dy = -ball.dy;
-              brick.status = false;
-              score++;
-              document.getElementById("score").textContent = score;
+          // tijolos
+          bricks.forEach(brick => {
+            if (brick.status) {
+              if (
+                ball.x > brick.x &&
+                ball.x < brick.x + brickWidth &&
+                ball.y > brick.y &&
+                ball.y < brick.y + brickHeight
+              ) {
+                ball.dy = -ball.dy;
+                brick.status = false;
+                score++;
+                document.getElementById("score").textContent = score;
 
-              if (score > highScore) {
-                highScore = score;
-                localStorage.setItem("highScore", highScore);
-                document.getElementById("highScore").textContent = highScore;
+                if (score > highScore) {
+                  highScore = score;
+                  localStorage.setItem("highScore", highScore);
+                  document.getElementById("highScore").textContent = highScore;
+                }
+
+                if (balls.length < 10) {
+                  balls.push({
+                    x: ball.x,
+                    y: ball.y,
+                    dx: -ball.dx,
+                    dy: ball.dy,
+                    radius: 7
+                  });
+                }
+
+                const compliment = compliments[Math.floor(Math.random() * compliments.length)];
+                const msg = document.createElement("div");
+                msg.textContent = compliment;
+                msg.style.position = "absolute";
+                msg.style.left = `${brick.x + 20}px`;
+                msg.style.top = `${brick.y + 60}px`;
+                msg.style.color = "black";
+                msg.style.fontWeight = "bold";
+                msg.style.fontSize = "16px";
+                document.body.appendChild(msg);
+                setTimeout(() => msg.remove(), 1500);
               }
-
-              if (balls.length < 10) {
-                balls.push({
-                  x: ball.x,
-                  y: ball.y,
-                  dx: -ball.dx,
-                  dy: ball.dy,
-                  radius: 7
-                });
-              }
-
-              const compliment = compliments[Math.floor(Math.random() * compliments.length)];
-              const msg = document.createElement("div");
-              msg.textContent = compliment;
-              msg.style.position = "absolute";
-              msg.style.left = `${brick.x + 20}px`;
-              msg.style.top = `${brick.y + 60}px`;
-              msg.style.color = "black";
-              msg.style.fontWeight = "bold";
-              msg.style.fontSize = "16px";
-              document.body.appendChild(msg);
-              setTimeout(() => msg.remove(), 1500);
             }
+          });
+
+          // Verifica se venceu
+          if (bricks.every(b => !b.status)) {
+            gameWon = true;
+            document.getElementById("finalMsg").style.display = "block";
           }
         });
-      });
-
-      if (balls.length > 0) {
-        requestAnimationFrame(draw);
       } else {
-        document.getElementById("finalMsg").style.display = "block";
+        // Animação contínua após vitória
+        balls.forEach(ball => {
+          ball.x += ball.dx;
+          ball.y += ball.dy;
+
+          if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+            ball.dx = -ball.dx;
+          }
+          if (ball.y + ball.dy < ball.radius || ball.y + ball.dy > canvas.height - ball.radius) {
+            ball.dy = -ball.dy;
+          }
+        });
       }
+
+      requestAnimationFrame(draw);
     }
 
     // mouse
