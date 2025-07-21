@@ -12,9 +12,6 @@
       background: #fff;
       position: relative;
       user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
     }
     #gameCanvas {
       border: 2px solid black;
@@ -22,7 +19,7 @@
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center bottom;
-      touch-action: none; /* Para melhor controle no mobile */
+      touch-action: none;
     }
     #info {
       position: absolute;
@@ -50,12 +47,22 @@
       z-index: 20;
       user-select: none;
     }
+    /* Mensagem secreta escondida no canto inferior direito */
+    #secret {
+      position: absolute;
+      bottom: 3px;
+      right: 5px;
+      font-size: 6px;
+      color: rgba(0, 0, 0, 0.06);
+      user-select: none;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas" width="400" height="600"></canvas>
   <div id="info">Pontuação: <span id="score">0</span> | Recorde: <span id="highScore">0</span></div>
   <div id="finalMsg">❤️ Você é incrível, Aninha! ❤️</div>
+  <div id="secret">Aninha... estou apaixonado por você 💌</div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
@@ -90,7 +97,8 @@
       "Maravilhosa demais, Aninha! 💖",
       "Você inspira, Aninha! 🌈",
       "Aninha = Pura luz! ✨",
-      "Rainha demais, Aninha! 👑"
+      "Rainha demais, Aninha! 👑",
+      "shh... estou apaixonado por você 💗"
     ];
 
     let score = 0;
@@ -100,8 +108,6 @@
     let gameOver = false;
     let gameWon = false;
 
-    // Formato de coração gigante em matriz para os tijolos
-    // 1 = tijolo ativo, 0 = vazio
     const heartShape = [
       [0,0,1,1,0,1,1,0,0],
       [0,1,1,1,1,1,1,1,0],
@@ -164,7 +170,6 @@
           ball.x += ball.dx;
           ball.y += ball.dy;
 
-          // Colisão com paredes
           if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
             ball.dx = -ball.dx;
           }
@@ -179,7 +184,6 @@
             }
           }
 
-          // Colisão com paddle
           if (
             ball.x > paddle.x &&
             ball.x < paddle.x + paddle.width &&
@@ -187,10 +191,9 @@
             ball.y - ball.radius < paddle.y + paddle.height
           ) {
             ball.dy = -ball.dy;
-            ball.y = paddle.y - ball.radius; // evita que a bola grude
+            ball.y = paddle.y - ball.radius;
           }
 
-          // Colisão com bricks
           bricks.forEach(brick => {
             if (brick.status) {
               if (
@@ -210,7 +213,6 @@
                   document.getElementById("highScore").textContent = highScore;
                 }
 
-                // Multiplica bolas (máx 10)
                 if (balls.length < 10) {
                   balls.push({
                     x: ball.x,
@@ -221,7 +223,6 @@
                   });
                 }
 
-                // Elogio animado
                 const compliment = compliments[Math.floor(Math.random() * compliments.length)];
                 const msg = document.createElement("div");
                 msg.textContent = compliment;
@@ -237,7 +238,6 @@
             }
           });
 
-          // Verifica vitória
           if (bricks.every(b => !b.status)) {
             gameWon = true;
             gameOver = true;
@@ -245,7 +245,6 @@
             document.getElementById("finalMsg").style.display = "block";
           }
         } else {
-          // Após o jogo acabar: anima bolas sem alterar paddle
           ball.x += ball.dx;
           ball.y += ball.dy;
 
@@ -265,7 +264,6 @@
       }
     }
 
-    // Controle de paddle mouse
     document.addEventListener("mousemove", e => {
       if (!gameOver) {
         const rect = canvas.getBoundingClientRect();
@@ -274,7 +272,6 @@
       }
     });
 
-    // Controle de paddle touch (mobile)
     canvas.addEventListener("touchmove", e => {
       e.preventDefault();
       if (!gameOver) {
